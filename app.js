@@ -22,7 +22,7 @@ app.use('/', indexRouter);
 
 // レコード取得
 app.get('/api/getRecords',(request,response,next) => {
-  conn.login('yosuke@dev.com', '1q2w3e4r', (err, res) => {
+  conn.login('', '', (err, res) => {
     if (err) {return console.error(err)}
     conn.query('SELECT id, name, count__c, latestVisitDate__c FROM Account', (err,res) => {
       if (err) { return console.error(err)}
