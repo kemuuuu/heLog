@@ -90,12 +90,14 @@ a.cp_btn:hover {
 	padding-top: 10%;
 	padding-bottom: 100px;
 }
+.box__btn_inner {
+	display: flex;
+}
 
+/* SFレコード入力欄 */
 .item {
 	margin-bottom: 10px;
 }
-
-
 .rec-list-item {
 	margin: 5px;
 	padding: 15px;
@@ -105,8 +107,6 @@ a.cp_btn:hover {
 	width: 80%;
 	margin: auto;
 }
-
-
 .rec-input {
 	border:0;
 	padding:10px;
@@ -123,15 +123,14 @@ a.cp_btn:hover {
 	box-shadow: inset 1px 4px 9px -6px rgba(0,0,0,0.5);
 	margin-left: 10px;
 }
-
 input:focus {
 	border:solid 1px rgb(247, 73, 131);
 }
-
 .column {
 	margin-left: 7%;
 }
 
+/* 保存ボタン */
 .btn-circle-kirby {
 	margin-right: 2%;
   display: inline-block;

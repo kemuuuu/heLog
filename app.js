@@ -1,12 +1,25 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var indexRouter = require('./routes/index');
-var app = express();
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+
+// Router
+const indexRouter = require('./routes/index');
+// const linkedinRouter = require('./routes/linkedin')
+
+const app = express();
+const http = require('https')
+const querystring = require('querystring')
+
+// salesforce
 const jsforce = require('jsforce')
 const conn = new jsforce.Connection()
+
+// linkedin
+let code;
+const client_id = '';
+const client_secret = '';
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -19,7 +32,76 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
+// linkedin
+app.use('/linkedin',(request, response, next) => {
+  // レンダリング
+  response.render('linkedin');
 
+  // 認証コード
+  code = request.query.code;
+
+  // アクセストークン取得
+  const params = querystring.stringify({
+    'grant_type': 'authorization_code',
+    'code': code,
+    'redirect_uri': 'http://localhost:3000/linkedin',
+    'client_id': client_id,
+    'client_secret': client_secret
+  })
+  let accessToken;
+  new Promise((resolve, reject) => {
+    const req = http.request('https://www.linkedin.com/oauth/v2/accessToken?'+params, res => {
+      console.log(`STATUS: ${res.statusCode}`)
+      console.log(`HEADERS: ${JSON.stringify(res.headers)}`)
+      res.setEncoding('utf8')
+      res.on('data', (chunk) => {
+        console.log('body: ' + chunk)
+        console.log(typeof chunk)
+        accessToken = JSON.parse(chunk).access_token
+        console.log('【ACCESS_TOKEN】: ' + accessToken)
+      })
+      res.on('end', () => {
+        console.log('No more data')
+        resolve()
+      })
+    })
+    req.on('error', err => {
+      console.error(`ERROR: ${err}`)
+    })
+    req.end()
+  })
+  .then(() => {
+    // person取得
+    const options = {
+      protocol: 'https:',
+      host: 'api.linkedin.com',
+      path: '/v1/people/~?format=json',
+      method: 'GET',
+　　　　  headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        }
+    }
+    const req = http.request(options, res => {
+      console.log(`STATUS: ${res.statusCode}`)
+      console.log(`HEADERS: ${JSON.stringify(res.headers)}`)
+      res.setEncoding('utf8')
+      res.on('data', (chunk) => {
+        console.log('body: ' + chunk)
+      })
+      res.on('end', () => {
+        console.log('No more data')
+      })
+    })
+    req.on('error', err => {
+      console.error(`ERROR: ${err}`)
+    })
+    req.end()
+  })
+})
+
+/**
+ * SALESFORCE
+ */
 // レコード取得
 app.get('/api/getRecords',(request,response,next) => {
   conn.login('', '', (err, res) => {
@@ -30,7 +112,6 @@ app.get('/api/getRecords',(request,response,next) => {
     })
   })
 })
-
 // アップデート
 app.post('/api/update', (request, response, next) => {
   conn.sobject('Account').update({
@@ -43,6 +124,42 @@ app.post('/api/update', (request, response, next) => {
     console.log('Updated Successfully : ' + ret.id);
     response.json({status: true, result: ret.id})
   })
+})
+
+
+/**
+ * LINKEDIN
+ */
+// linkedinのアクセストークン取得
+app.get('/api/auth/linkedin', (request, response, next) => {
+
+  const params = querystring.stringify({
+    'response_type': 'code',
+    'client_id': client_id,
+    'redirect_uri': 'http://localhost:3000/linkedin',
+    'scope': 'r_emailaddress'
+  })
+
+  let authUri;
+
+  const req = http.request('https://www.linkedin.com/oauth/v2/authorization?'+params, res => {
+    console.log(`STATUS: ${res.statusCode}`)
+    console.log(`HEADERS: ${JSON.stringify(res.headers)}`)
+    authUri = res.headers.location
+    res.setEncoding('utf8')
+    res.on('data', (chunk) => {
+      // ...
+    })
+    res.on('end', () => {
+      console.log('No more data')
+      response.json({status: true, result: authUri})
+    })
+  })
+  req.on('error', err => {
+    console.error(`ERROR: ${err}`)
+  })
+  req.end()
+
 })
 
 

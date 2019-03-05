@@ -1,12 +1,27 @@
 (function() {
   window.onload = () => {
     const b = document.getElementById('sf-btn')
-    b.onclick = () => sfintegrate()
+    if (b) b.onclick = (e) => sfintegrate(e)
     b.style.display = "hidden"
+
+    const linkedin = document.getElementById('linkedin-btn')
+    if (linkedin) linkedin.onclick = (e) => linkedintegrate(e)
   }
 })()
 
-const sfintegrate = () => {
+// linekdin連携
+const linkedintegrate = (event) => {
+  event.preventDefault();
+  fetch('/api/auth/linkedin')
+  .then((res) => res.json().then(json => {
+    location.href = json.result
+  }))
+  .catch(console.error)
+}
+
+// salesforce連携
+const sfintegrate = (event) => {
+  event.preventDefault();
   fetch('/api/getRecords')
   .then((res)=> res.json().then(json => {
     const recs = json.result.records.map((e,i) => {
@@ -32,6 +47,7 @@ const sfintegrate = () => {
   .catch(console.error)
 }
 
+// salesforce保存時
 const handleClick = (e) => {
   const id = e.target.id
   const name = document.getElementById(id + '-name').value

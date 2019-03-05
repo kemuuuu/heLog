@@ -3,8 +3,13 @@ extends layout
 block content
   main
     div.main-bg
-      img.logo(src="/images/logo.png", alt="heLog", width="100px", height='auto')
+      a(href='/')
+        img.logo(src="/images/logo.png", alt="heLog", width="100px", height='auto')
       div
         ul#records-list
       div.box__btn
-        a#sf-btn.cp_btn(href="#") sync
+        span.box__btn_inner
+          a#sf-btn.cp_btn(href="#") salesforce
+          a#linkedin-btn.cp_btn(href="#") linkedin
+          a.cp_btn(href="#") kintone
+          a.cp_btn(href="#") satori
